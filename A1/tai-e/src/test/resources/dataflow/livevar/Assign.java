@@ -7,3 +7,12 @@ class Assign {
         return b;
     }
 }
+
+// x = 1
+
+/*
+y = x
+z = x
+...
+x = 2
+ */

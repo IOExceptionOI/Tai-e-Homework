@@ -37,7 +37,7 @@ public class ArithmeticExp extends AbstractBinaryExp {
         DIV("/"),
         REM("%"),
         ;
-
+        //the associated value
         private final String symbol;
 
         Op(String symbol) {
@@ -52,11 +52,14 @@ public class ArithmeticExp extends AbstractBinaryExp {
 
     private final Op op;
 
+    //create an exp of [value1 op value2]
     public ArithmeticExp(Op op, Var value1, Var value2) {
         super(value1, value2);
         this.op = op;
     }
 
+    //to validate whether the operand1 and operand2 are all Int
+    //to validate whether the type of operand1 and operand2 is the same and is primitive type
     @Override
     protected void validate() {
         assert (isIntLike(operand1) && isIntLike(operand2)) ||
@@ -64,6 +67,7 @@ public class ArithmeticExp extends AbstractBinaryExp {
         assert isPrimitive(operand1);
     }
 
+    //return the operator["+", "-", ...]
     @Override
     public Op getOperator() {
         return op;

@@ -26,6 +26,10 @@ import pascal.taie.analysis.dataflow.analysis.DataflowAnalysis;
 import pascal.taie.analysis.dataflow.fact.DataflowResult;
 import pascal.taie.analysis.graph.cfg.CFG;
 
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
+
 /**
  * Base class for data-flow analysis solver, which provides common
  * functionalities for different solver implementations.
@@ -78,7 +82,26 @@ public abstract class Solver<Node, Fact> {
 
     protected void initializeForward(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         // TODO - finish me
-    }
+        //BEGIN:OUT[Entry] = null;
+        Node entryNode = cfg.getEntry();
+        result.setOutFact(entryNode,analysis.newInitialFact());
+        //END:OUT[Entry] = null;
+
+        //BEGIN: foreach(basic block B : cfg - entryNode) OUT[B] = null;
+        //transform the nodeSet to Stream and then again transform to List for later production of ListIterator
+        List<Node> nodeSetList = cfg.getNodes().stream().toList();
+        //Create ListIterator and set the Index as 1 because the entryNode has been dealt with
+        ListIterator<Node> listIterator = nodeSetList.listIterator(1);
+        //Check whether there is successor exist
+        while(listIterator.hasNext()){
+            //Initialize the Out_fact of each node to be emptySet except the entryNode
+            Node node = listIterator.next();
+            Fact Out_factOfNode = analysis.newInitialFact();
+            result.setOutFact(node, Out_factOfNode);
+            }
+        }
+        //END: foreach(basic block B : cfg - entryNode) OUT[B] = null;
+
 
     protected void initializeBackward(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         throw new UnsupportedOperationException();

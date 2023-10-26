@@ -43,8 +43,12 @@ public class Value {
     /**
      * Cache frequently used values for saving space.
      */
+    //create a Value cache array for quick transfer an INT to the abstract Value
     private static final Value[] cache = new Value[-(-128) + 127 + 1];
 
+    //cache[0] = -128 ---> cache[255] = 127,
+    // cache offset is 128, which means that the value of cache[index] is index - offset
+    //example: cache[0] : index = 0 , offset = 128 , so the value is 0 - 128 = -128
     static {
         for (int i = 0; i < cache.length; i++) {
             cache[i] = new Value(i - 128);
@@ -77,11 +81,15 @@ public class Value {
      *
      * @return the constant for given value.
      */
+    //transfer the para INT to the abstract Value
     public static Value makeConstant(int value) {
+        //offset is defined previously
         final int offset = 128;
+        //if the INT to be transferred is within the value cache(-128 ~ 127)
         if (value >= -128 && value <= 127) { // will cache
             return cache[value + offset];
         }
+        //if the INT is beyond the range of Value cache, we have to inefficiently to create a new instance
         return new Value(value);
     }
 

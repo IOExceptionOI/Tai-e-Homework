@@ -23,8 +23,15 @@
 package pascal.taie.analysis.dataflow.solver;
 
 import pascal.taie.analysis.dataflow.analysis.DataflowAnalysis;
+import pascal.taie.analysis.dataflow.analysis.LiveVariableAnalysis;
 import pascal.taie.analysis.dataflow.fact.DataflowResult;
+import pascal.taie.analysis.dataflow.fact.SetFact;
 import pascal.taie.analysis.graph.cfg.CFG;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
 
 /**
  * Base class for data-flow analysis solver, which provides common
@@ -56,8 +63,13 @@ public abstract class Solver<Node, Fact> {
      * @return the analysis result
      */
     public DataflowResult<Node, Fact> solve(CFG<Node> cfg) {
+        //Initialize the DataflowResult through initializing the cfg
+        //Initial:
         DataflowResult<Node, Fact> result = initialize(cfg);
+        //analyze and obtain the analysis result through the iterativeSolver
+        //Analyze:
         doSolve(cfg, result);
+        //return the analysis result
         return result;
     }
 
@@ -68,11 +80,14 @@ public abstract class Solver<Node, Fact> {
      */
     private DataflowResult<Node, Fact> initialize(CFG<Node> cfg) {
         DataflowResult<Node, Fact> result = new DataflowResult<>();
+        //if analyze forward, then initialize forward:
         if (analysis.isForward()) {
             initializeForward(cfg, result);
         } else {
+            //if analyze backward, then initialize backward:
             initializeBackward(cfg, result);
         }
+        //return the initialized DataflowResult
         return result;
     }
 
@@ -82,6 +97,37 @@ public abstract class Solver<Node, Fact> {
 
     protected void initializeBackward(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         // TODO - finish me
+
+        //BEGIN: IN[Exit] = null
+
+        //obtain the exitNode
+        Node exitNode = cfg.getExit();
+        //Initialize the In_fact of the exitnode to be emptySet
+        Fact In_factOfExitNode = analysis.newBoundaryFact(cfg);
+        result.setInFact(exitNode, In_factOfExitNode);
+
+        //BEGIN: IN[Exit] = null
+
+
+        // BEGIN:for(each basic block B (except [Exit])
+        // {            In[B] = NULL
+        // }
+
+        //transform the nodeSet to Stream and then again transform to List for later production of ListIterator
+        List<Node> nodeList = cfg.getNodes().stream().toList();
+        //Create ListIterator and set the Index as size() - 1 because the exitNode has been dealt with
+        ListIterator<Node> listIterator = nodeList.listIterator(nodeList.size() - 1);
+        //Check whether there is predecessor exist
+        while(listIterator.hasPrevious()){
+            //Initialize the In_fact of each node to be emptySet except the exitNode
+            Node node = listIterator.previous();
+            Fact In_factOfNode = analysis.newInitialFact();
+            result.setInFact(node, In_factOfNode);
+        }
+
+        // END:for(each basic block B (except [Exit])
+        // {            In[B] = NULL
+        // }
     }
 
     /**
@@ -89,8 +135,10 @@ public abstract class Solver<Node, Fact> {
      */
     private void doSolve(CFG<Node> cfg, DataflowResult<Node, Fact> result) {
         if (analysis.isForward()) {
+            //if analyze forward:
             doSolveForward(cfg, result);
         } else {
+            //if analyze backward:
             doSolveBackward(cfg, result);
         }
     }

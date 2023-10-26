@@ -8,4 +8,13 @@ class Branch {
             return k + n;
         }
     }
+//    void func(){
+//        int x = 0;
+//        while(x < 4){
+//            x++;
+//        }
+//    }
+
 }
+// x = y;
+// x = exp( if(x == 1))

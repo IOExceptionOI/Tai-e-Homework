@@ -114,6 +114,7 @@ public class SetFact<E> {
      * @return a new fact which is the intersection of this and other facts.
      */
     public SetFact<E> intersectWith(SetFact<E> other) {
+        //Method-copy():return new SetFact<>(this.set);
         SetFact<E> result = copy();
         result.intersect(other);
         return result;

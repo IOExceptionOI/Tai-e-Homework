@@ -23,22 +23,20 @@
 package pascal.taie.analysis.dataflow.analysis.constprop;
 
 import pascal.taie.analysis.dataflow.analysis.AbstractDataflowAnalysis;
+import pascal.taie.analysis.dataflow.fact.MapFact;
 import pascal.taie.analysis.graph.cfg.CFG;
 import pascal.taie.config.AnalysisConfig;
 import pascal.taie.ir.IR;
-import pascal.taie.ir.exp.ArithmeticExp;
-import pascal.taie.ir.exp.BinaryExp;
-import pascal.taie.ir.exp.BitwiseExp;
-import pascal.taie.ir.exp.ConditionExp;
-import pascal.taie.ir.exp.Exp;
-import pascal.taie.ir.exp.IntLiteral;
-import pascal.taie.ir.exp.ShiftExp;
-import pascal.taie.ir.exp.Var;
+import pascal.taie.ir.exp.*;
 import pascal.taie.ir.stmt.DefinitionStmt;
 import pascal.taie.ir.stmt.Stmt;
 import pascal.taie.language.type.PrimitiveType;
 import pascal.taie.language.type.Type;
 import pascal.taie.util.AnalysisException;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ConstantPropagation extends
         AbstractDataflowAnalysis<Stmt, CPFact> {
@@ -57,18 +55,28 @@ public class ConstantPropagation extends
     @Override
     public CPFact newBoundaryFact(CFG<Stmt> cfg) {
         // TODO - finish me
-        return null;
+        return new CPFact();
     }
 
     @Override
     public CPFact newInitialFact() {
         // TODO - finish me
-        return null;
+        return new CPFact();
     }
 
     @Override
     public void meetInto(CPFact fact, CPFact target) {
         // TODO - finish me
+        if(fact != null && target != null){
+            //obtain the Var Set of the target
+            Set<Var> targetVarSet = target.keySet();
+            for(Var targetVar : targetVarSet){
+                Value v_1 = fact.get(targetVar);
+                Value v_2 = target.get(targetVar);
+                Value meetResult = meetValue(v_1, v_2);
+                target.update(targetVar, meetResult);
+            }
+        }
     }
 
     /**
@@ -76,12 +84,49 @@ public class ConstantPropagation extends
      */
     public Value meetValue(Value v1, Value v2) {
         // TODO - finish me
+        //rule1: (x, v) ∧ (x, NAC) = (x, NAC)
+        //identity to: either v_1 or v_2 is NAC
+        if(v1.isNAC() || v2.isNAC()){
+            return Value.getNAC();
+        }
+        //rule2: (x, UNDEF) ∧ (x, v) = (x, v) ---> In this case, we don't care about the problem caused by UNDEF
+        if(v1.isConstant() && v2.isUndef() || v1.isUndef() && v2.isConstant()){
+            if(v1.isConstant()){
+                return Value.makeConstant(v1.getConstant());
+            }else{
+                return Value.makeConstant(v2.getConstant());
+            }
+        }
+        //rule3: (x, v_1) ∧ (x, v_2) = [1: (x, v_1) if v1 == v2]  [2:(x, NAC) if v_1 != v_2]
+        if(v1.isConstant() && v2.isConstant()){
+            if(v1.getConstant() == v2.getConstant()){
+                return v1;
+            }else{
+                return Value.getNAC();
+            }
+        }
         return null;
     }
 
     @Override
     public boolean transferNode(Stmt stmt, CPFact in, CPFact out) {
         // TODO - finish me
+        MapFact<Var, Value> gens = new CPFact();
+        DefinitionStmt<?,?> definitionStmt  = null;
+        if(stmt instanceof DefinitionStmt<?, ?>){
+            definitionStmt = (DefinitionStmt<?, ?>) stmt;
+        }else{
+            //do nothing if the stmt is not a definitionStmt
+            //return false to indicate that this basic block do not change after this transfer
+            return false;
+        }
+        LValue lValue = definitionStmt.getLValue();
+        RValue rValue = definitionStmt.getRValue();
+
+
+        //definitionStmt.getLValue();
+
+
         return false;
     }
 
@@ -112,6 +157,22 @@ public class ConstantPropagation extends
      */
     public static Value evaluate(Exp exp, CPFact in) {
         // TODO - finish me
+        List<RValue> expUses = exp.getUses();
+        for(RValue rValue : expUses){
+           // if(rValue instanceof )
+        }
+        //rule1: s: x = c; c is a constant ,则 gens = {(x, c)} ；
+
+        //rule2: s: x = y; gens={(x, val(y))};
+
+        //rule3: s: x = y op z; gens = {x, f(y,z)}
+        //cases of f(y, z):
+        //case1: f(y, z) = [val(y) op val(z)] if y and z are all constant
+
+        //case2: f(y, z) = [NAC] if either y or z is NAC
+
+        //case3: f(y, z) = UNDEF otherwise
+
         return null;
     }
 }
